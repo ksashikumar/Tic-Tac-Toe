@@ -24,7 +24,7 @@ static   bool          ttt_init();
 
 class Game 
 {
-	public:
+  public:
 
 	SDL_Rect box[9];
 
