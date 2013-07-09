@@ -2,6 +2,7 @@
 #include "SDL/SDL_image.h"
 #include <iostream>
 #include <string>
+#include <time.h>
 
 const int    SCREEN_WIDTH  = 640;
 const int    SCREEN_HEIGHT = 480;
@@ -21,7 +22,7 @@ SDL_Surface  *symbol2 = NULL;
 
 SDL_Event     event;
 
-int           check[9];
+int           check_cell[9];
 
 bool          ttt_init       (void);
 bool          load_files     (void);
@@ -36,6 +37,12 @@ class Game
 
   SDL_Rect   box[9];
   bool       check_home;
+  int        check_turn;
+
+  static const Sint16 x1 = 70, x2 = 244, x3 = 420;  
+  static const Sint16 y1 = 0, y2 = 170, y3 = 333;
+
+  static const Uint16 width1 = 220, width2 = 150, height = 147;
 
   Game();
 
@@ -44,10 +51,12 @@ class Game
   void handle_home_event();
 
   void display_board();
-  
-  void handle_game_event();
 
-  void update_display();
+  void apply_symbol(int, int);
+
+  void handle_game_event();
+  
+  int turn();
 
 };
 
@@ -68,7 +77,7 @@ ttt_init (void)
   SDL_WM_SetCaption(game_name, NULL);
 
   for(int i = 0; i < 9; i++)
-    check[i] = -1;
+    check_cell[i] = -1;
 
   return true;
 
@@ -143,7 +152,12 @@ return_pos (int x, int y)
 
 Game::Game (void)
 {
+
+  int t;
   check_home = true;
+  srand(time(NULL));
+  check_turn = rand()%2;
+
 }
 
 
@@ -185,10 +199,95 @@ void Game::handle_home_event (void)
 
 void Game::display_board (void)
 {
-  
+  int i;
+
   apply_surface(0, 0, board, screen, NULL);  
+
   handle_game_event();
   
+}
+
+
+void Game::apply_symbol (int flag, int check)
+{
+
+  SDL_Rect     rectangle;
+  SDL_Surface *source = NULL;
+
+  if(check == 0)
+    source = symbol1;
+  else if(check == 1) 
+    source = symbol2;
+
+  switch(flag)
+    {
+      case 0:  
+        rectangle.x = x1;
+        rectangle.y = y1;
+        rectangle.w = width1;
+        rectangle.h = height;
+      break;
+      
+      case 1:               
+        rectangle.x = x2;
+        rectangle.y = y1;
+        rectangle.w = width2;
+        rectangle.h = height;
+      break;
+
+      case 2:               
+        rectangle.x = x3;
+        rectangle.y = y1;
+        rectangle.w = width1;
+        rectangle.h = height;
+      break;
+
+      case 3:               
+        rectangle.x = x1;
+        rectangle.y = y2;
+        rectangle.w = width2;
+        rectangle.h = height;
+      break;
+
+      case 4:               
+        rectangle.x = x2;
+        rectangle.y = y2;
+        rectangle.w = width2;
+        rectangle.h = height;
+      break;
+
+      case 5:               
+        rectangle.x = x3;
+        rectangle.y = y2;
+        rectangle.w = width1;
+        rectangle.h = height;
+      break;
+
+      case 6:               
+        rectangle.x = x1;
+        rectangle.y = y3;
+        rectangle.w = width2;
+        rectangle.h = height;
+      break;
+
+      case 7:               
+        rectangle.x = x2;
+        rectangle.y = y3;
+        rectangle.w = width2;
+        rectangle.h = height;
+      break;
+
+      case 8:               
+        rectangle.x = x3;
+        rectangle.y = y3;
+        rectangle.w = width1;
+        rectangle.h = height;
+      break;
+    }
+
+  SDL_BlitSurface(source, NULL, board, &rectangle);
+
+
 }
 
 
@@ -196,10 +295,6 @@ void Game::handle_game_event (void)
 {
 
   int i, j;
-  int x1 = 0, x2 = 244, x3 = 420;  
-  int y1 = 0, y2 = 174, y3 = 333;
-
-  int width1 = 220, width2 = 150, height = 147;
   
   if(event.type == SDL_MOUSEBUTTONDOWN)
     {
@@ -208,32 +303,69 @@ void Game::handle_game_event (void)
   
       if( (i > x1) && (i < x1 + width1) )
         {
-          if( (j > y1) && (j < y1 + height) )
-            std::cout << "\nCell 1: Mouse Down\n";
-          if( (j > y2) && (j < y2 + height) )
-            std::cout << "\nCell 4: Mouse Down\n";
-          if( (j > y3) && (j < y3 + height) )
-            std::cout << "\nCell 7: Mouse Down\n";              
+          if( (j > y1) && (j < y1 + height) && (check_cell[0] == -1) )
+            { 
+              check_cell[0] = turn();
+              apply_symbol(0, check_cell[0]);
+              std::cout << "\nTurn: " << turn();
+              std::cout << "\nCell 1: Mouse Down\n";
+            }
+          if( (j > y2) && (j < y2 + height) && (check_cell[3] == -1) )
+            {
+              check_cell[3] = turn();
+              apply_symbol(3, check_cell[3]);
+              std::cout << "\nCell 4: Mouse Down\n";
+            }
+          if( (j > y3) && (j < y3 + height) && (check_cell[6] == -1) )
+            {  
+              check_cell[6] = turn();
+              apply_symbol(6, check_cell[6]);
+              std::cout << "\nCell 7: Mouse Down\n";              
+            }
         }
 
       if( (i > x2) && (i < x2 + width2) )
         {
-          if( (j > y1) && (j < y1 + height) )
-            std::cout << "\nCell 2: Mouse Down\n";
-          if( (j > y2) && (j < y2 + height) )
-            std::cout << "\nCell 5: Mouse Down\n";
-          if( (j > y3) && (j < y3 + height) )
-            std::cout << "\nCell 9: Mouse Down\n";              
+          if( (j > y1) && (j < y1 + height) && (check_cell[1] == -1) )
+            {
+              check_cell[1] = turn();
+              apply_symbol(1, check_cell[1]);              
+              std::cout << "\nCell 2: Mouse Down\n";
+            }
+          if( (j > y2) && (j < y2 + height) && (check_cell[4] == -1) )
+            {
+              check_cell[4] = turn();
+              apply_symbol(4, check_cell[4]);
+              std::cout << "\nCell 5: Mouse Down\n";
+            }
+          if( (j > y3) && (j < y3 + height) && (check_cell[7] == -1) )
+            {
+              check_cell[7] = turn();
+              apply_symbol(7, check_cell[7]);
+              std::cout << "\nCell 8: Mouse Down\n";
+            }              
         }
 
       if( (i > x3) && (i < x3 + width1) )
         {
-          if( (j > y1) && (j < y1 + height) )
-            std::cout << "\nCell 3: Mouse Down\n";
-          if( (j > y2) && (j < y2 + height) )
-            std::cout << "\nCell 6: Mouse Down\n";
-          if( (j > y3) && (j < y3 + height) )
-            std::cout << "\nCell 9: Mouse Down\n";              
+          if( (j > y1) && (j < y1 + height) && (check_cell[2] == -1) )
+            {
+              check_cell[2] = turn();
+              apply_symbol(2, check_cell[2]);
+              std::cout << "\nCell 3: Mouse Down\n";
+            }
+          if( (j > y2) && (j < y2 + height) && (check_cell[5] == -1) )
+            {
+              check_cell[5] = turn();
+              apply_symbol(5, check_cell[5]);
+              std::cout << "\nCell 6: Mouse Down\n";
+            }
+          if( (j > y3) && (j < y3 + height) && (check_cell[8] == -1) )
+            {
+              check_cell[8] = turn();
+              apply_symbol(8, check_cell[8]);        
+              std::cout << "\nCell 9: Mouse Down\n";
+            }              
         }
 
     }
@@ -241,9 +373,15 @@ void Game::handle_game_event (void)
 }
 
 
-void Game::update_display (void)
+int Game::turn (void)
 {
 
+  if(check_turn == 0)
+    check_turn = 1;
+  else if(check_turn == 1)
+    check_turn = 0;
+
+  return check_turn;
 
 }
 
@@ -273,10 +411,8 @@ int main (int argc, char* args[])
         obj.display_board();            
     
       if(event.type == SDL_QUIT) 
-        {
-          std::cout << "\nQuit requested, quitting.\n";
           exit(0);
-        }
+
       SDL_Flip(screen);
     }
 
