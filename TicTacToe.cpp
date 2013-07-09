@@ -1,6 +1,6 @@
 #include "SDL/SDL.h"
 #include "SDL/SDL_image.h"
-#include <stdio.h>
+#include <iostream>
 #include <string>
 
 const int    SCREEN_WIDTH  = 640;
@@ -34,13 +34,14 @@ class Game
 
   public:
 
-  SDL_Rect box[9];
+  SDL_Rect   box[9];
+  bool       check_home;
 
   Game();
 
   void render_home_screen();
 
-  void handle_home_event();
+  bool handle_home_event();
 
   void render_board();
   
@@ -65,6 +66,9 @@ ttt_init (void)
       return false;
 
   SDL_WM_SetCaption(game_name, NULL);
+
+  for(int i = 0; i < 9; i++)
+    check[i] = -1;
 
   return true;
 
@@ -144,7 +148,7 @@ set_clips (void)
 
 Game::Game (void)
 {
-
+  check_home = true;
 }
 
 
@@ -156,56 +160,63 @@ void Game::render_home_screen (void)
 }
 
 
-void Game::handle_home_event (void)
+bool Game::handle_home_event (void)
 {
   
   int i = 0, j = 0;
   int width = 290, height = 87;
   int x = 180, y1 = 180, y2 = 320;
 
-  if(event.type == SDL_MOUSEBUTTONDOWN)
+  if(check_home)
     {
-      
-      if(event.button.button == SDL_BUTTON_LEFT)
+      if(event.type == SDL_MOUSEBUTTONDOWN)
         {
-          i = event.button.x;
-          j = event.button.y;
-
-          if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
+      
+          if(event.button.button == SDL_BUTTON_LEFT)
             {
-              printf("\nSINGLE PLAYER: Mouse Down\n");
+              i = event.button.x;
+              j = event.button.y;
+    
+              if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
+                {
+                  std::cout << "\nSINGLE PLAYER: Mouse Down\n";
+                }
+    
+              if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
+                {
+                  std::cout << "\nTWO PLAYER: Mouse Down\n";
+                }
             }
 
-          if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
-            {
-              printf("\nTWO PLAYER: Mouse Down\n");
-            }
         }
 
+      if(event.type == SDL_MOUSEBUTTONUP)
+        {
+
+          if( event.button.button == SDL_BUTTON_LEFT )
+            {
+              i = event.button.x;
+              j = event.button.y;
+    
+              if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
+                {
+                  std::cout << "\nSINGLE PLAYER: Mouse Up\n";
+                  check_home = false;
+                  return true;
+                }
+  
+              if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
+                {
+                  std::cout << "\nTWO PLAYER: Mouse Up\n";
+                  check_home = false;
+                  return true;
+                }
+            }
+
+        }
     }
-
-    if( event.type == SDL_MOUSEBUTTONUP )
-      {
-
-        if( event.button.button == SDL_BUTTON_LEFT )
-          {
-            i = event.button.x;
-            j = event.button.y;
-
-            if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
-              {
-                printf("\nSINGLE PLAYER: Mouse Up\n");
-                render_board();
-              }
-
-            if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
-              {
-                printf("\nTWO PLAYER: Mouse Up\n");
-              }
-          }
-
-      }
-
+  return false;
+  
 }
 
 
@@ -254,10 +265,11 @@ int main (int argc, char* args[])
      
       if(SDL_PollEvent(&event))
         {
-            obj.handle_home_event();
+          if(obj.handle_home_event())
+            obj.render_board();
 
-            if(event.type == SDL_QUIT)
-              quit = true;
+          if(event.type == SDL_QUIT)
+            quit = true;
         }
 
 
