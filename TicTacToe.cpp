@@ -10,15 +10,16 @@ const int    SCREEN_BPP    = 32;
 const char  *game_name     = "Tic Tac Toe"; 
 const char  *home_name     = "home.png";
 const char  *board_name    = "board.png";
-const char  *symbol_name   = "symbol.png";
+const char  *symbol_name1  = "symbol1.png";
+const char  *symbol_name2  = "symbol2.png";
 
-SDL_Surface  *screen = NULL;
-SDL_Surface  *home   = NULL;
-SDL_Surface  *board  = NULL;
-SDL_Surface  *symbol = NULL;
+SDL_Surface  *screen  = NULL;
+SDL_Surface  *home    = NULL;
+SDL_Surface  *board   = NULL;
+SDL_Surface  *symbol1 = NULL;
+SDL_Surface  *symbol2 = NULL;
 
 SDL_Event     event;
-SDL_Rect      clips[2];
 
 int           check[9];
 
@@ -27,7 +28,6 @@ bool          load_files     (void);
 SDL_Surface  *load_image     (std::string filename);
 void          apply_surface  (int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip);
 int           return_pos     (int x, int y);
-void          set_clips      (void);
 
 class Game 
 {
@@ -39,11 +39,11 @@ class Game
 
   Game();
 
-  void render_home_screen();
+  void display_home_screen();
 
-  bool handle_home_event();
+  void handle_home_event();
 
-  void render_board();
+  void display_board();
   
   void handle_game_event();
 
@@ -79,11 +79,13 @@ bool
 load_files (void)
 {
 
-  home   = load_image(home_name);
-  board  = load_image(board_name);
-  symbol = load_image(symbol_name);
+  home    = load_image(home_name);
+  board   = load_image(board_name);
+  symbol1 = load_image(symbol_name1);
+  symbol2 = load_image(symbol_name2);
 
-  if(home == NULL || board == NULL || symbol == NULL)
+
+  if(home == NULL || board == NULL || symbol1 == NULL || symbol2 == NULL)
     return false;
 
   return true;
@@ -138,13 +140,6 @@ return_pos (int x, int y)
 }
 
 
-void
-set_clips (void)
-{
-
-
-}
-
 
 Game::Game (void)
 {
@@ -152,7 +147,7 @@ Game::Game (void)
 }
 
 
-void Game::render_home_screen (void)
+void Game::display_home_screen (void)
 {
 
   apply_surface(0, 0, home, screen, NULL);
@@ -160,71 +155,38 @@ void Game::render_home_screen (void)
 }
 
 
-bool Game::handle_home_event (void)
+void Game::handle_home_event (void)
 {
   
   int i = 0, j = 0;
   int width = 290, height = 87;
   int x = 180, y1 = 180, y2 = 320;
 
-  if(check_home)
+  if(event.type == SDL_MOUSEBUTTONDOWN)
     {
-      if(event.type == SDL_MOUSEBUTTONDOWN)
-        {
-      
-          if(event.button.button == SDL_BUTTON_LEFT)
-            {
-              i = event.button.x;
-              j = event.button.y;
-    
-              if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
-                {
-                  std::cout << "\nSINGLE PLAYER: Mouse Down\n";
-                }
-    
-              if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
-                {
-                  std::cout << "\nTWO PLAYER: Mouse Down\n";
-                }
-            }
+      i = event.button.x;
+      j = event.button.y;
 
+      if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
+        {
+          std::cout << "\nSINGLE PLAYER: Mouse Down\n";
+          check_home = false;
         }
-
-      if(event.type == SDL_MOUSEBUTTONUP)
-        {
-
-          if( event.button.button == SDL_BUTTON_LEFT )
-            {
-              i = event.button.x;
-              j = event.button.y;
     
-              if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
-                {
-                  std::cout << "\nSINGLE PLAYER: Mouse Up\n";
-                  check_home = false;
-                  return true;
-                }
-  
-              if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
-                {
-                  std::cout << "\nTWO PLAYER: Mouse Up\n";
-                  check_home = false;
-                  return true;
-                }
-            }
-
+      if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
+        {
+          std::cout << "\nTWO PLAYER: Mouse Down\n";
+          check_home = false;
         }
     }
-  return false;
-  
+
 }
 
 
-void Game::render_board (void)
+void Game::display_board (void)
 {
   
   apply_surface(0, 0, board, screen, NULL);  
-
   handle_game_event();
   
 }
@@ -233,6 +195,48 @@ void Game::render_board (void)
 void Game::handle_game_event (void)
 {
 
+  int i, j;
+  int x1 = 0, x2 = 244, x3 = 420;  
+  int y1 = 0, y2 = 174, y3 = 333;
+
+  int width1 = 220, width2 = 150, height = 147;
+  
+  if(event.type == SDL_MOUSEBUTTONDOWN)
+    {
+      i = event.button.x;
+      j = event.button.y;
+  
+      if( (i > x1) && (i < x1 + width1) )
+        {
+          if( (j > y1) && (j < y1 + height) )
+            std::cout << "\nCell 1: Mouse Down\n";
+          if( (j > y2) && (j < y2 + height) )
+            std::cout << "\nCell 4: Mouse Down\n";
+          if( (j > y3) && (j < y3 + height) )
+            std::cout << "\nCell 7: Mouse Down\n";              
+        }
+
+      if( (i > x2) && (i < x2 + width2) )
+        {
+          if( (j > y1) && (j < y1 + height) )
+            std::cout << "\nCell 2: Mouse Down\n";
+          if( (j > y2) && (j < y2 + height) )
+            std::cout << "\nCell 5: Mouse Down\n";
+          if( (j > y3) && (j < y3 + height) )
+            std::cout << "\nCell 9: Mouse Down\n";              
+        }
+
+      if( (i > x3) && (i < x3 + width1) )
+        {
+          if( (j > y1) && (j < y1 + height) )
+            std::cout << "\nCell 3: Mouse Down\n";
+          if( (j > y2) && (j < y2 + height) )
+            std::cout << "\nCell 6: Mouse Down\n";
+          if( (j > y3) && (j < y3 + height) )
+            std::cout << "\nCell 9: Mouse Down\n";              
+        }
+
+    }
 
 }
 
@@ -258,24 +262,24 @@ int main (int argc, char* args[])
 
   Game obj;
 
-  obj.render_home_screen(); 
+  obj.display_home_screen(); 
 
-  while( quit == false )
+  while ( SDL_WaitEvent(&event) >= 0 ) 
     {
-     
-      if(SDL_PollEvent(&event))
+
+      if(obj.check_home)
+        obj.handle_home_event();
+      else
+        obj.display_board();            
+    
+      if(event.type == SDL_QUIT) 
         {
-          if(obj.handle_home_event())
-            obj.render_board();
-
-          if(event.type == SDL_QUIT)
-            quit = true;
+          std::cout << "\nQuit requested, quitting.\n";
+          exit(0);
         }
-
-
-      if(SDL_Flip(screen) == -1)
-            return 1;
+      SDL_Flip(screen);
     }
 
   return 0;
+
 }
