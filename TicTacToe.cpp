@@ -28,7 +28,6 @@ bool          ttt_init       (void);
 bool          load_files     (void);
 SDL_Surface  *load_image     (std::string filename);
 void          apply_surface  (int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_Rect* clip);
-int           return_pos     (int x, int y);
 
 class Game 
 {
@@ -143,15 +142,6 @@ apply_surface (int x, int y, SDL_Surface* source, SDL_Surface* destination, SDL_
   SDL_BlitSurface(source, clip, destination, &offset);
 
 }
-
-
-int
-return_pos (int x, int y)
-{
-
-
-}
-
 
 
 Game::Game (void)
