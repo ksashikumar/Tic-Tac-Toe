@@ -35,10 +35,10 @@ class Game
 
   public:
 
-  SDL_Rect   box[9];
   bool       check_home;
   bool       check_player; /* true for single player */
   int        check_turn;
+  int        current_cell;
 
   static const Sint16 x1 = 70, x2 = 244, x3 = 420;  
   static const Sint16 y1 = 0, y2 = 175, y3 = 335;
@@ -56,6 +56,8 @@ class Game
   void apply_symbol(int, int);
 
   void handle_game_event();
+
+  int  check_game_result();
   
   int turn();
 
@@ -67,6 +69,7 @@ bool
 ttt_init (void)
 {
 
+  int i;
   if(SDL_Init(SDL_INIT_EVERYTHING) == -1)
     return false;
 
@@ -77,7 +80,7 @@ ttt_init (void)
 
   SDL_WM_SetCaption(game_name, NULL);
 
-  for(int i = 0; i < 9; i++)
+  for(i = 0; i < 9; i++)
     check_cell[i] = -1;
 
   return true;
@@ -206,7 +209,18 @@ void Game::display_board (void)
 
   apply_surface(0, 0, board, screen, NULL);  
 
-  handle_game_event();
+  if(current_cell != -1)
+  {
+    if((i = check_game_result()) == -1)
+      handle_game_event();
+    else
+    {
+      std::cout <<"\nPlayer:" << i << "wins!\n";
+      exit(0);    
+    }
+  }
+  else 
+    handle_game_event();
   
 }
 
@@ -309,18 +323,21 @@ void Game::handle_game_event (void)
           if( (j > y1) && (j < y1 + height) && (check_cell[0] == -1) )
             { 
               check_cell[0] = turn();
+              current_cell  = 0;
               apply_symbol(0, check_cell[0]);
               std::cout << "\nCell 1: Mouse Down\n";
             }
           if( (j > y2) && (j < y2 + height) && (check_cell[3] == -1) )
             {
               check_cell[3] = turn();
+              current_cell  = 3;
               apply_symbol(3, check_cell[3]);
               std::cout << "\nCell 4: Mouse Down\n";
             }
           if( (j > y3) && (j < y3 + height) && (check_cell[6] == -1) )
             {  
               check_cell[6] = turn();
+              current_cell  = 6;
               apply_symbol(6, check_cell[6]);
               std::cout << "\nCell 7: Mouse Down\n";              
             }
@@ -331,18 +348,21 @@ void Game::handle_game_event (void)
           if( (j > y1) && (j < y1 + height) && (check_cell[1] == -1) )
             {
               check_cell[1] = turn();
+              current_cell  = 1;
               apply_symbol(1, check_cell[1]);              
               std::cout << "\nCell 2: Mouse Down\n";
             }
           if( (j > y2) && (j < y2 + height) && (check_cell[4] == -1) )
             {
               check_cell[4] = turn();
+              current_cell  = 4;
               apply_symbol(4, check_cell[4]);
               std::cout << "\nCell 5: Mouse Down\n";
             }
           if( (j > y3) && (j < y3 + height) && (check_cell[7] == -1) )
             {
               check_cell[7] = turn();
+              current_cell  = 7;
               apply_symbol(7, check_cell[7]);
               std::cout << "\nCell 8: Mouse Down\n";
             }              
@@ -353,18 +373,21 @@ void Game::handle_game_event (void)
           if( (j > y1) && (j < y1 + height) && (check_cell[2] == -1) )
             {
               check_cell[2] = turn();
+              current_cell  = 2;
               apply_symbol(2, check_cell[2]);
               std::cout << "\nCell 3: Mouse Down\n";
             }
           if( (j > y2) && (j < y2 + height) && (check_cell[5] == -1) )
             {
               check_cell[5] = turn();
+              current_cell  = 5;
               apply_symbol(5, check_cell[5]);
               std::cout << "\nCell 6: Mouse Down\n";
             }
           if( (j > y3) && (j < y3 + height) && (check_cell[8] == -1) )
             {
               check_cell[8] = turn();
+              current_cell  = 8;
               apply_symbol(8, check_cell[8]);        
               std::cout << "\nCell 9: Mouse Down\n";
             }              
@@ -372,6 +395,91 @@ void Game::handle_game_event (void)
 
     }
 
+}
+
+int Game::check_game_result (void)
+{
+
+  int i, j;
+  int ref_row, ref_col;
+  int flag   = -1;
+
+  if((current_cell >= 0) && (current_cell <= 2)) 
+    ref_row = 0;
+
+  else if((current_cell >= 3) && (current_cell <= 5))
+    ref_row = 3;
+
+  else if((current_cell >= 6) && (current_cell <= 8))
+    ref_row = 6;
+
+  for(i = 0; i < 3; i++)
+  {
+    if((current_cell == i) || (current_cell == (i+3)) || (current_cell == (i+6)))
+    {    
+      ref_col = i;
+      break;
+    }
+  }
+
+  for(i = ref_row; i < ref_row + 2; i++)
+  {
+    if(check_cell[i] == check_cell[i+1])
+      flag = check_cell[i];
+    else
+    {
+      flag = -1;
+      break;
+    }
+  }
+  
+  if(flag != -1)
+    return flag;
+
+  for(i = ref_col; i < ref_col + 4; i = i + 3)
+  {
+    if(check_cell[i] == check_cell[i+3])
+      flag = check_cell[i];
+    else
+    {
+      flag = -1;
+      break;
+    }
+  }
+
+  if(flag != -1)
+    return flag;
+
+  for(i = 0; i < 5; i = i + 4)
+  {
+    if(check_cell[i] == check_cell[i+4])
+      flag = check_cell[i];
+    else
+    {
+      flag = -1;
+      break;
+    }
+  }
+
+  if(flag != -1)
+    return flag;
+
+  for(i = 2; i < 5; i = i + 2)
+  {
+    if(check_cell[i] == check_cell[i+2])
+      flag = check_cell[i];
+    else
+    {
+      flag = -1;
+      break;
+    }
+  }
+
+  if(flag != -1)
+    return flag;
+      
+  return flag;
+    
 }
 
 
@@ -401,6 +509,8 @@ int main (int argc, char* args[])
     return 1;
 
   Game obj;
+
+  obj.current_cell = -1;
 
   obj.display_home_screen(); 
 
