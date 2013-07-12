@@ -37,12 +37,13 @@ class Game
 
   SDL_Rect   box[9];
   bool       check_home;
+  bool       check_player; /* true for single player */
   int        check_turn;
 
   static const Sint16 x1 = 70, x2 = 244, x3 = 420;  
-  static const Sint16 y1 = 0, y2 = 170, y3 = 333;
+  static const Sint16 y1 = 0, y2 = 175, y3 = 335;
 
-  static const Uint16 width1 = 220, width2 = 150, height = 147;
+  static const Uint16 width1 = 220, width2 = 150, height = 135;
 
   Game();
 
@@ -184,13 +185,15 @@ void Game::handle_home_event (void)
       if( (i > x) && (i < x + width) && (j > y1) && (j < y1 + height) )
         {
           std::cout << "\nSINGLE PLAYER: Mouse Down\n";
-          check_home = false;
+          check_player = true;
+          check_home   = false;
         }
     
       if( (i > x) && (i < x + width) && (j > y2) && (j < y2 + height) )
         {
           std::cout << "\nTWO PLAYER: Mouse Down\n";
-          check_home = false;
+          check_player = false;
+          check_home   = false;
         }
     }
 
@@ -301,13 +304,12 @@ void Game::handle_game_event (void)
       i = event.button.x;
       j = event.button.y;
   
-      if( (i > x1) && (i < x1 + width1) )
+      if( (i > x1) && (i < x1 + width2) )
         {
           if( (j > y1) && (j < y1 + height) && (check_cell[0] == -1) )
             { 
               check_cell[0] = turn();
               apply_symbol(0, check_cell[0]);
-              std::cout << "\nTurn: " << turn();
               std::cout << "\nCell 1: Mouse Down\n";
             }
           if( (j > y2) && (j < y2 + height) && (check_cell[3] == -1) )
