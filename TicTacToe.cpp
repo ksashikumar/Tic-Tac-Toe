@@ -13,12 +13,16 @@ const char  *home_name     = "home.png";
 const char  *board_name    = "board.png";
 const char  *symbol_name1  = "symbol1.png";
 const char  *symbol_name2  = "symbol2.png";
+const char  *winner_name1  = "winner1.png";
+const char  *winner_name2  = "winner2.png";
 
 SDL_Surface  *screen  = NULL;
 SDL_Surface  *home    = NULL;
 SDL_Surface  *board   = NULL;
 SDL_Surface  *symbol1 = NULL;
 SDL_Surface  *symbol2 = NULL;
+SDL_Surface  *winner1 = NULL;
+SDL_Surface  *winner2 = NULL;
 
 SDL_Event     event;
 
@@ -36,8 +40,10 @@ class Game
 
   bool       check_home;
   bool       check_player; /* true for single player */
+  bool       check_final_option;
   int        check_turn;
   int        current_cell;
+  int        result;
 
   static const Sint16 x1 = 70, x2 = 244, x3 = 420;  
   static const Sint16 y1 = 0, y2 = 175, y3 = 335;
@@ -57,6 +63,8 @@ class Game
   void handle_game_event();
 
   int  check_game_result();
+
+  bool apply_result_surface(int, int, SDL_Surface*, SDL_Surface* );
   
   int turn();
 
@@ -95,6 +103,8 @@ load_files (void)
   board   = load_image(board_name);
   symbol1 = load_image(symbol_name1);
   symbol2 = load_image(symbol_name2);
+  winner1 = load_image(winner_name1);
+  winner2 = load_image(winner_name2);
 
 
   if(home == NULL || board == NULL || symbol1 == NULL || symbol2 == NULL)
@@ -148,7 +158,10 @@ Game::Game (void)
 {
 
   int t;
-  check_home = true;
+  check_home         = true;
+  check_final_option = false;
+  result             = -1;
+  current_cell       = -1;
   srand(time(NULL));
   check_turn = rand()%2;
 
@@ -203,14 +216,22 @@ void Game::display_board (void)
   {
     if((i = check_game_result()) == -1)
       handle_game_event();
-    else
+    else if(result == -1)
     {
-      std::cout <<"\nPlayer:" << i << "wins!\n";
-      exit(0);    
+      if(i == 0)
+      {
+        std::cout <<"\nPlayer:" << i << "wins!\n";
+      }
+      else if(i == 1)
+      {
+        std::cout <<"\nPlayer:" << i << "wins!\n";
+      }    
     }
   }
   else 
     handle_game_event();
+
+  result = i;
   
 }
 
@@ -473,6 +494,42 @@ int Game::check_game_result (void)
 }
 
 
+bool Game::apply_result_surface (int x, int y, SDL_Surface* source, SDL_Surface* destination)
+{
+
+  int i = 0, j = 0;
+  int width = 102, height = 32;
+  int x1 = 208, x2 = 310, y1 = 255;
+
+  SDL_Rect offset;
+
+  offset.x = x;
+  offset.y = y;
+
+  SDL_BlitSurface(source, NULL, destination, &offset);
+
+  if(event.type == SDL_MOUSEBUTTONDOWN)
+    {
+      i = event.button.x;
+      j = event.button.y;
+      if( (i > x1) && (i < x1 + width) && (j > y1) && (j < y1 + height) )
+        {
+          std::cout << "\nPlay Again\n";
+          check_final_option = true;
+          return true;
+        }
+  
+      if( (i > x2) && (i < x2 + width) && (j > y1) && (j < y1 + height) )
+        {
+          std::cout << "\nExit: Bye!\n";
+          check_final_option = true;
+          return false;
+        }
+   }
+   
+}
+
+
 int Game::turn (void)
 {
 
@@ -490,32 +547,45 @@ int Game::turn (void)
 int main (int argc, char* args[])
 {
   
-  bool quit = false;
+  bool main_loop = true;
 
-  if(ttt_init() == false)
-    return 1;
-
-  if(load_files() == false)
-    return 1;
-
-  Game obj;
-
-  obj.current_cell = -1;
-
-  obj.display_home_screen(); 
-
-  while ( SDL_WaitEvent(&event) >= 0 ) 
+  while(main_loop)
     {
 
-      if(obj.check_home)
-        obj.handle_home_event();
-      else
-        obj.display_board();            
-    
-      if(event.type == SDL_QUIT) 
-          exit(0);
+      if(ttt_init() == false)
+        return 1;
 
-      SDL_Flip(screen);
+      if(load_files() == false)
+        return 1;
+
+      Game obj;
+
+      obj.display_home_screen(); 
+
+      while ( SDL_WaitEvent(&event) >= 0 ) 
+        {
+
+          if(obj.check_home)
+            obj.handle_home_event();
+          else 
+            {
+              obj.display_board();
+              if(obj.result == 0)
+                main_loop = obj.apply_result_surface(195, 150, winner1, screen);
+              else if(obj.result == 1)
+                main_loop = obj.apply_result_surface(195, 150, winner2, screen);
+            }    
+
+          if(obj.result != -1 && main_loop && obj.check_final_option)
+            break;
+          else if(obj.result != -1 && main_loop == false && obj.check_final_option)
+            exit(0);
+
+          if(event.type == SDL_QUIT) 
+            exit(0);
+
+          SDL_Flip(screen);
+        }
     }
 
   return 0;
